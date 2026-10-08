@@ -1,0 +1,814 @@
+/* Tasky: TaskNotes' layout, drawn with the active theme's variables. */
+
+body {
+  --tasky-open: var(--text-faint);
+  --tasky-in-progress: var(--color-blue);
+  --tasky-done: var(--color-green);
+  --tasky-high: var(--color-red);
+  --tasky-normal: var(--color-orange);
+  --tasky-low: var(--color-cyan);
+}
+
+/* ---------- Task card ---------- */
+
+.tasky-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--size-4-2);
+  padding: var(--size-2-3) var(--size-4-2);
+  border-radius: var(--radius-s);
+  transition: background-color 120ms ease;
+}
+
+.tasky-card.is-interactive {
+  cursor: pointer;
+}
+
+.tasky-card.is-interactive:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.tasky-card.is-focused {
+  background-color: hsla(var(--interactive-accent-hsl), 0.1);
+  box-shadow: inset 2px 0 0 var(--interactive-accent);
+}
+
+.tasky-card.is-dragging {
+  opacity: 0.4;
+}
+
+.tasky-card__status {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  border-radius: 50%;
+  border: 1.5px solid var(--tasky-open);
+  transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.tasky-card.is-interactive .tasky-card__status:hover {
+  transform: scale(1.12);
+  border-color: var(--interactive-accent);
+}
+
+.tasky-status--in-progress {
+  border-color: var(--tasky-in-progress);
+  background: radial-gradient(circle, var(--tasky-in-progress) 0 2.5px, transparent 3px);
+}
+
+.tasky-status--done {
+  border-color: var(--tasky-done);
+  background-color: var(--tasky-done);
+}
+
+.tasky-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tasky-card__title {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--size-2-3);
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.tasky-card.is-done .tasky-card__title {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.tasky-card.is-done .tasky-card__body {
+  opacity: 0.75;
+}
+
+.tasky-card__title-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.tasky-card__priority {
+  flex-shrink: 0;
+  margin-top: calc(0.675em - 3px);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.tasky-priority--high {
+  background-color: var(--tasky-high);
+}
+
+.tasky-priority--normal {
+  background-color: var(--tasky-normal);
+}
+
+.tasky-priority--low {
+  background-color: var(--tasky-low);
+}
+
+.tasky-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1px var(--size-4-2);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  line-height: 1.4;
+}
+
+.tasky-card__meta .tag {
+  font-size: inherit;
+  padding-block: 0;
+  line-height: inherit;
+}
+
+.tasky-card__date--due.is-past {
+  color: var(--text-error);
+}
+
+.tasky-card__date--due.is-today {
+  color: var(--color-orange);
+}
+
+.tasky-card__date--scheduled.is-past,
+.tasky-card__date--scheduled.is-today {
+  color: var(--color-blue);
+}
+
+.tasky-card__pomos {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tasky-card__pomos svg {
+  width: 12px;
+  height: 12px;
+}
+
+.tasky-card__actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.tasky-card:hover .tasky-card__actions,
+.tasky-card.is-focused .tasky-card__actions {
+  opacity: 1;
+}
+
+.tasky-card__actions .clickable-icon {
+  padding: var(--size-2-1);
+}
+
+.tasky-card__actions svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------- Bases views ---------- */
+
+.tasky-view {
+  height: 100%;
+  overflow: auto;
+  container-type: inline-size;
+}
+
+.tasky-list {
+  padding: var(--size-4-1) var(--size-4-2);
+}
+
+.tasky-group + .tasky-group {
+  margin-top: var(--size-4-3);
+}
+
+.tasky-group__heading {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding: var(--size-2-2) var(--size-4-2);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+}
+
+.tasky-count {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-normal);
+}
+
+.tasky-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--size-4-3);
+  padding: var(--size-4-12) var(--size-4-4);
+  color: var(--text-faint);
+}
+
+.tasky-board {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--size-4-3);
+  height: 100%;
+  padding: var(--size-4-3);
+  overflow-x: auto;
+}
+
+.tasky-column {
+  flex: 1 1 0;
+  min-width: 220px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-l);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.tasky-column.is-drop-target {
+  border-color: var(--interactive-accent);
+  background-color: hsla(var(--interactive-accent-hsl), 0.06);
+}
+
+.tasky-column__header {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding: var(--size-4-2) var(--size-4-2) var(--size-4-2) var(--size-4-3);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  color: var(--text-normal);
+}
+
+.tasky-column__icon {
+  display: inline-flex;
+}
+
+.tasky-column__icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tasky-status-text--open {
+  color: var(--tasky-open);
+}
+
+.tasky-status-text--in-progress {
+  color: var(--tasky-in-progress);
+}
+
+.tasky-status-text--done {
+  color: var(--tasky-done);
+}
+
+.tasky-column__add {
+  margin-left: auto;
+}
+
+.tasky-column__cards {
+  flex: 1;
+  min-height: 40px;
+  padding: 0 var(--size-2-2) var(--size-2-3);
+  overflow-y: auto;
+}
+
+/* Narrow spaces (a sidebar, a split pane): stack the columns. */
+@container (max-width: 560px) {
+  .tasky-board {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+  }
+
+  .tasky-column {
+    flex: none;
+    min-width: 0;
+    max-width: none;
+    max-height: none;
+  }
+}
+
+/* ---------- Calendar ---------- */
+
+.tasky-cal {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--size-4-3);
+}
+
+.tasky-cal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--size-4-2);
+  padding: 0 var(--size-4-1) var(--size-4-2);
+}
+
+.tasky-cal__title {
+  color: var(--text-normal);
+  font-size: var(--font-ui-large);
+  font-weight: var(--font-semibold);
+}
+
+.tasky-cal__nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tasky-cal__today {
+  padding: var(--size-2-1) var(--size-4-2);
+  border-radius: var(--radius-s);
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  cursor: pointer;
+}
+
+.tasky-cal__today:hover {
+  background-color: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.tasky-cal__grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-rows: minmax(96px, 1fr);
+  border-top: 1px solid var(--background-modifier-border);
+  border-left: 1px solid var(--background-modifier-border);
+}
+
+.tasky-cal__weekday {
+  padding: var(--size-4-1) var(--size-4-2);
+  border-right: 1px solid var(--background-modifier-border);
+  border-bottom: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-semibold);
+  text-align: center;
+}
+
+.tasky-cal__grid > .tasky-cal__weekday {
+  align-self: start;
+}
+
+.tasky-cal:not(.is-compact) .tasky-cal__grid {
+  grid-template-rows: auto;
+}
+
+.tasky-cal__day {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--size-2-2);
+  border-right: 1px solid var(--background-modifier-border);
+  border-bottom: 1px solid var(--background-modifier-border);
+  transition: background-color 120ms ease;
+}
+
+.tasky-cal__day.is-outside {
+  background-color: var(--background-secondary);
+}
+
+.tasky-cal__day.is-outside .tasky-cal__number {
+  color: var(--text-faint);
+}
+
+.tasky-cal__day.is-drop-target {
+  background-color: hsla(var(--interactive-accent-hsl), 0.1);
+}
+
+.tasky-cal__number {
+  align-self: flex-end;
+  min-width: 1.8em;
+  padding: 0 var(--size-2-2);
+  border-radius: var(--radius-s);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  text-align: center;
+  cursor: pointer;
+}
+
+.tasky-cal__number:hover {
+  background-color: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.tasky-cal__day.is-today .tasky-cal__number {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-weight: var(--font-semibold);
+}
+
+.tasky-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--size-2-3);
+  min-width: 0;
+  padding: 1px var(--size-2-3);
+  border-radius: var(--radius-s);
+  background-color: var(--background-modifier-hover);
+  border-left: 2px solid var(--interactive-accent);
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.tasky-chip:hover {
+  background-color: var(--background-modifier-active-hover);
+}
+
+.tasky-chip.is-scheduled {
+  border-left-color: var(--color-blue);
+}
+
+.tasky-chip.is-done {
+  border-left-color: var(--tasky-done);
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+.tasky-chip.is-focused {
+  box-shadow: inset 0 0 0 1px var(--interactive-accent);
+}
+
+.tasky-chip.is-dragging {
+  opacity: 0.4;
+}
+
+.tasky-chip .tasky-card__priority {
+  margin-top: 0;
+}
+
+.tasky-chip__title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tasky-cal__more {
+  padding: 0 var(--size-2-3);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  cursor: pointer;
+}
+
+.tasky-cal__more:hover {
+  color: var(--text-normal);
+}
+
+/* Compact month in the sidebar panel */
+
+.tasky-cal.is-compact {
+  height: auto;
+  padding: var(--size-4-1) var(--size-4-2) var(--size-4-2);
+}
+
+.tasky-cal.is-compact .tasky-cal__header {
+  padding-bottom: var(--size-2-2);
+}
+
+.tasky-cal.is-compact .tasky-cal__title {
+  font-size: var(--font-ui-small);
+}
+
+.tasky-cal.is-compact .tasky-cal__grid {
+  grid-auto-rows: auto;
+  border: none;
+  row-gap: 2px;
+}
+
+.tasky-cal.is-compact .tasky-cal__weekday {
+  border: none;
+  padding: var(--size-2-1) 0;
+  color: var(--text-faint);
+}
+
+.tasky-cal.is-compact .tasky-cal__day {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-s);
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.tasky-cal.is-compact .tasky-cal__day:hover {
+  background-color: var(--background-modifier-hover);
+}
+
+.tasky-cal.is-compact .tasky-cal__day.is-outside {
+  background: none;
+  color: var(--text-faint);
+}
+
+.tasky-cal.is-compact .tasky-cal__day.is-today {
+  color: var(--interactive-accent);
+  font-weight: var(--font-bold);
+}
+
+.tasky-cal.is-compact .tasky-cal__day.is-selected {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.tasky-cal__dot {
+  position: absolute;
+  bottom: 1px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: var(--text-muted);
+}
+
+.tasky-cal__dot.is-overdue {
+  background-color: var(--text-error);
+}
+
+.tasky-cal__day.is-selected .tasky-cal__dot {
+  background-color: var(--text-on-accent);
+}
+
+/* ---------- Tasks panel ---------- */
+
+.tasky-panel {
+  padding: 0;
+}
+
+.tasky-panel__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: var(--size-2-2) var(--size-4-2) 0 var(--size-4-3);
+}
+
+.tasky-panel__summary {
+  flex: 1;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.tasky-panel__toolbar .clickable-icon.is-active {
+  color: var(--interactive-accent);
+}
+
+.tasky-panel__list {
+  padding: 0 var(--size-4-1) var(--size-4-4);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.tasky-panel__list .tasky-group {
+  margin-top: var(--size-4-1);
+}
+
+.tasky-panel__list .tasky-group.is-overdue .tasky-group__heading {
+  color: var(--text-error);
+}
+
+.tasky-panel__day {
+  justify-content: space-between;
+  margin-top: var(--size-4-2);
+}
+
+.tasky-panel .tasky-card__actions {
+  display: none;
+}
+
+.tasky-panel .tasky-card:hover .tasky-card__actions,
+.tasky-panel .tasky-card.is-focused .tasky-card__actions {
+  display: flex;
+}
+
+/* ---------- Create modal ---------- */
+
+.tasky-create__input {
+  width: 100%;
+  min-height: 3.5em;
+  resize: vertical;
+  font-size: var(--font-ui-medium);
+}
+
+.tasky-create__toolbar {
+  display: flex;
+  gap: var(--size-2-2);
+  margin: var(--size-4-2) 0;
+}
+
+.tasky-create__tool {
+  position: relative;
+}
+
+.tasky-create__tool.is-set::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--interactive-accent);
+}
+
+.tasky-create__preview {
+  min-height: 44px;
+  padding: var(--size-4-1) 0;
+  border-top: 1px solid var(--background-modifier-border);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.tasky-create__placeholder {
+  padding: var(--size-4-3);
+  color: var(--text-faint);
+  font-size: var(--font-ui-small);
+}
+
+.tasky-create__hint {
+  margin-top: var(--size-4-2);
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  line-height: 1.5;
+}
+
+.tasky-date-input {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------- Pomodoro ---------- */
+
+.tasky-pomodoro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--size-4-4);
+  padding: var(--size-4-6) var(--size-4-3);
+}
+
+.tasky-pomodoro__phase {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.02em;
+}
+
+.tasky-pomodoro.is-running .tasky-pomodoro__phase {
+  color: var(--interactive-accent);
+}
+
+.tasky-pomodoro.is-break.is-running .tasky-pomodoro__phase {
+  color: var(--color-green);
+}
+
+.tasky-pomodoro__ring {
+  position: relative;
+  width: min(220px, 80%);
+  aspect-ratio: 1;
+}
+
+.tasky-pomodoro__ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.tasky-pomodoro__track,
+.tasky-pomodoro__arc {
+  fill: none;
+  stroke-width: 4;
+}
+
+.tasky-pomodoro__track {
+  stroke: var(--background-modifier-border);
+}
+
+.tasky-pomodoro__arc {
+  stroke: var(--interactive-accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.tasky-pomodoro.is-break .tasky-pomodoro__arc {
+  stroke: var(--color-green);
+}
+
+.tasky-pomodoro__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--size-4-2);
+}
+
+.tasky-pomodoro__time {
+  color: var(--text-normal);
+  font-size: 2.6em;
+  font-weight: var(--font-light, 300);
+  font-variant-numeric: tabular-nums;
+}
+
+.tasky-pomodoro__adjust {
+  display: flex;
+  gap: var(--size-4-2);
+}
+
+.tasky-pomodoro__adjust button {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: var(--font-ui-small);
+}
+
+.tasky-pomodoro__task {
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+}
+
+.tasky-pomodoro__task .tasky-card {
+  text-align: left;
+}
+
+.tasky-pomodoro__links {
+  display: flex;
+  justify-content: space-around;
+  margin-top: var(--size-4-1);
+  font-size: var(--font-ui-small);
+}
+
+.tasky-pomodoro__links a,
+.tasky-pomodoro__choose {
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.tasky-pomodoro__links a:hover,
+.tasky-pomodoro__choose:hover {
+  color: var(--text-normal);
+}
+
+.tasky-pomodoro__controls {
+  display: flex;
+  gap: var(--size-4-2);
+}
+
+.tasky-pomodoro__controls .mod-cta {
+  min-width: 140px;
+}
+
+.tasky-pomodoro__stats {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+}
+
+.tasky-pomodoro__count {
+  color: var(--interactive-accent);
+  font-weight: var(--font-semibold);
+}
+
+.tasky-statusbar {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.tasky-statusbar.is-paused {
+  opacity: 0.6;
+}
+
+.tasky-statusbar__icon {
+  display: inline-flex;
+}
+
+.tasky-statusbar__icon svg {
+  width: 12px;
+  height: 12px;
+}

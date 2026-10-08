@@ -1,0 +1,23 @@
+{
+  "name": "obsidian-tasky",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tasks as notes in Bases, with a sidebar panel, calendar and pomodoro timer",
+  "main": "main.js",
+  "scripts": {
+    "dev": "esbuild src/main.ts --bundle --format=cjs --target=es2020 --external:obsidian --external:electron \"--external:@codemirror/*\" \"--external:@lezer/*\" --outfile=main.js --sourcemap=inline --watch",
+    "build": "tsc --noEmit && esbuild src/main.ts --bundle --format=cjs --target=es2020 --external:obsidian --external:electron \"--external:@codemirror/*\" \"--external:@lezer/*\" --outfile=main.js",
+    "lint": "eslint src"
+  },
+  "author": "bishop67",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-obsidianmd": "^0.4.2",
+    "jiti": "^2.7.0",
+    "moment": "^2.29.4",
+    "obsidian": "1.13.1",
+    "typescript": "^5.6.0"
+  }
+}
