@@ -1,6 +1,7 @@
-import { BasesEntry, BasesView, Keymap, QueryController, moment, setIcon, setTooltip } from "obsidian";
+import { BasesEntry, BasesView, Keymap, QueryController, setIcon, setTooltip } from "obsidian";
 import type Tasky from "./main";
-import { Moment, dayKey, renderMonth, tasksByDay } from "./calendar";
+import { dayKey, renderMonth, tasksByDay } from "./calendar";
+import { Moment, moment } from "./moment";
 import { DRAG_TYPE, renderTaskCard, taskMenu, withDay } from "./card";
 import { Draft, STATUSES, Status, Task, formatDate, readTask, setStatus, updateTask } from "./tasks";
 

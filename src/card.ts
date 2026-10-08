@@ -1,4 +1,5 @@
-import { Keymap, Menu, TFile, moment, setIcon, setTooltip } from "obsidian";
+import { Keymap, Menu, TFile, setIcon, setTooltip } from "obsidian";
+import { moment } from "./moment";
 import type Tasky from "./main";
 import { PRIORITIES, STATUSES, Task, dayRelation, formatDate, nextStatus, setStatus, updateTask } from "./tasks";
 

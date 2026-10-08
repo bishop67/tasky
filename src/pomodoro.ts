@@ -1,4 +1,5 @@
-import { Events, ItemView, Notice, TFile, WorkspaceLeaf, moment, setIcon } from "obsidian";
+import { Events, ItemView, Notice, TFile, WorkspaceLeaf, setIcon } from "obsidian";
+import { moment } from "./moment";
 import type Tasky from "./main";
 import { renderTaskCard } from "./card";
 import { readTask, updateTask } from "./tasks";
