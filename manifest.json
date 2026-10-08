@@ -1,7 +1,7 @@
 {
   "id": "tasky",
   "name": "Tasky",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "1.10.2",
   "description": "Keep tasks as notes and plan them in a sidebar panel, a list, a board or a calendar, with a built-in pomodoro timer.",
   "author": "bishop67",
