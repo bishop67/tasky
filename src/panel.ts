@@ -1,6 +1,7 @@
-import { ItemView, WorkspaceLeaf, debounce, moment, setIcon } from "obsidian";
+import { ItemView, WorkspaceLeaf, debounce, setIcon } from "obsidian";
 import type Tasky from "./main";
-import { Moment, dayKey, renderMonth, taskDays, tasksByDay } from "./calendar";
+import { dayKey, renderMonth, taskDays, tasksByDay } from "./calendar";
+import { Moment, moment } from "./moment";
 import { renderTaskCard } from "./card";
 import { Task, allTasks } from "./tasks";
 

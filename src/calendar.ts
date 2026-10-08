@@ -1,7 +1,7 @@
-import { moment, setIcon } from "obsidian";
+import { setIcon } from "obsidian";
+import { Moment, moment } from "./moment";
 import type { Task } from "./tasks";
 
-export type Moment = ReturnType<typeof moment>;
 
 export const dayKey = (m: Moment) => m.format("YYYY-MM-DD");
 

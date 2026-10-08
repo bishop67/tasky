@@ -1,4 +1,5 @@
-import { App, TFile, moment, normalizePath } from "obsidian";
+import { App, TFile, normalizePath } from "obsidian";
+import { moment } from "./moment";
 
 export type Status = "open" | "in-progress" | "done";
 
