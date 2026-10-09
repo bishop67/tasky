@@ -3,13 +3,9 @@
 Tasks as notes for Obsidian: a sidebar panel with a mini calendar, Bases list/board/calendar views, and a pomodoro timer. Modelled on [TaskNotes](https://github.com/callumalpass/tasknotes), without sync, recurrence, an API or webhooks.
 
 <p align="center">
-  <img src="docs/board.png" alt="Board view" width="98.5%">
-</p>
-<p align="center">
+  <img src="docs/board.png" alt="Board view" width="99%"><br>
   <img src="docs/calendar.png" alt="Calendar view: drag a task to move its date" width="47.9%">
-  <img src="docs/list.png" alt="List view" width="50.6%">
-</p>
-<p align="center">
+  <img src="docs/list.png" alt="List view" width="50.6%"><br>
   <img src="docs/panel.png" alt="Sidebar tasks panel" width="14.4%">
   <img src="docs/pomodoro.png" alt="Pomodoro timer" width="23.5%">
   <img src="docs/quick-add.png" alt="Quick add with live preview" width="60.1%">
