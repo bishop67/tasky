@@ -133,8 +133,8 @@ export class Pomodoro extends Events {
     this.changed();
   }
 
-  setTask(file: TFile | null) {
-    this.state.taskPath = file?.path ?? null;
+  setTask(file: TFile | string | null) {
+    this.state.taskPath = typeof file === "string" ? file : (file?.path ?? null);
     this.changed();
   }
 
