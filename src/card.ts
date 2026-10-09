@@ -1,7 +1,7 @@
 import { Keymap, Menu, TFile, setIcon, setTooltip } from "obsidian";
 import { moment } from "./moment";
 import type Tasky from "./main";
-import { PRIORITIES, STATUSES, Task, dayRelation, formatDate, nextStatus, setStatus, updateTask } from "./tasks";
+import { PRIORITIES, STATUSES, Task, dayRelation, formatDate, isTaskTag, nextStatus, setStatus, updateTask } from "./tasks";
 
 export const DRAG_TYPE = "text/tasky-task";
 
@@ -197,7 +197,7 @@ export function renderTaskCard(parent: HTMLElement, plugin: Tasky, task: CardTas
   if (task.due) renderDate(meta, "Due", task.due, "due", done);
   if (task.scheduled) renderDate(meta, "Scheduled", task.scheduled, "scheduled", done);
   for (const ctx of task.contexts) meta.createSpan({ cls: "tasky-card__context", text: `@${ctx}` });
-  for (const tag of task.tags.filter((t) => t !== "task")) meta.createEl("a", { cls: "tag", text: `#${tag}` });
+  for (const tag of task.tags.filter((t) => !isTaskTag(t))) meta.createEl("a", { cls: "tag", text: `#${tag}` });
   if (task.pomodoros) {
     const pomos = meta.createSpan({ cls: "tasky-card__pomos" });
     setIcon(pomos.createSpan(), "timer");

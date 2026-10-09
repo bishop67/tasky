@@ -16,6 +16,8 @@ export const PRIORITIES = [
 ];
 
 export const TASK_TAG = "task";
+// Obsidian tags are case-insensitive, like Bases' file.hasTag().
+export const isTaskTag = (tag: string) => tag.toLowerCase() === TASK_TAG;
 
 export interface Draft {
   title: string;
@@ -51,7 +53,7 @@ export function readTask(app: App, file: TFile): Task | null {
   const fm = app.metadataCache.getFileCache(file)?.frontmatter;
   if (!fm) return null;
   const tags = toList(fm.tags);
-  if (!tags.includes(TASK_TAG)) return null;
+  if (!tags.some(isTaskTag)) return null;
   const status = STATUSES.find((s) => s.value === fm.status)?.value ?? "open";
   return {
     file,
@@ -107,7 +109,7 @@ export async function createTask(app: App, folder: string, draft: Draft): Promis
     due,
     scheduled,
     contexts,
-    tags: [TASK_TAG, ...draft.tags.filter((t) => t !== TASK_TAG)],
+    tags: [TASK_TAG, ...draft.tags.filter((t) => !isTaskTag(t))],
     completedDate: completedDate(draft.status),
   });
   return file;
