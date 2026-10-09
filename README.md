@@ -28,7 +28,7 @@ A task is a note in `Tasks/` tagged `task`, with `status`, `priority`, `due`, `s
 npm install && npm run build
 ```
 
-Copy `main.js`, `manifest.json`, `styles.css` to `<vault>/.obsidian/plugins/tasky/` and enable it. Needs Obsidian 1.10.2+ with Bases on.
+Copy `main.js`, `manifest.json`, `styles.css` to `<vault>/.obsidian/plugins/tasky/` and enable it. Needs Obsidian 1.13+ with Bases on.
 
 To release: bump `manifest.json`, push a matching tag (`1.0.2`), publish the draft release.
 

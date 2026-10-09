@@ -1,4 +1,4 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting, normalizePath } from "obsidian";
+import { App, Notice, Plugin, PluginSettingTab, SettingDefinitionItem, normalizePath } from "obsidian";
 import { CreateTaskModal } from "./modals";
 import { POMODORO_VIEW, Pomodoro, PomodoroState, PomodoroView, renderStatusBar } from "./pomodoro";
 import { TASKS_PANEL, TasksPanel } from "./panel";
@@ -12,6 +12,8 @@ interface Settings {
   longBreakMinutes: number;
   longBreakEvery: number;
 }
+
+type MinuteKey = Exclude<keyof Settings, "tasksFolder">;
 
 interface SavedData {
   settings?: Partial<Settings>;
@@ -164,46 +166,38 @@ class TaskySettingTab extends PluginSettingTab {
     super(app, plugin);
   }
 
-  display() {
-    const { containerEl } = this;
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    const minutes = (name: string, key: MinuteKey, desc = "Minutes.") =>
+      ({ name, desc, control: { type: "number", key, min: 1, step: 1, placeholder: String(DEFAULTS[key]) } }) as const;
+    return [
+      {
+        name: "Tasks folder",
+        desc: "New tasks and the task views file are created in this folder.",
+        control: { type: "folder", key: "tasksFolder", placeholder: DEFAULTS.tasksFolder },
+      },
+      {
+        type: "group",
+        heading: "Pomodoro",
+        items: [
+          minutes("Focus length", "workMinutes"),
+          minutes("Short break", "shortBreakMinutes"),
+          minutes("Long break", "longBreakMinutes"),
+          minutes("Long break every", "longBreakEvery", "Number of focus sessions before a long break."),
+        ],
+      },
+    ];
+  }
+
+  // The default writes plugin.settings as the whole data file, which would drop the pomodoro state.
+  async setControlValue(key: string, value: unknown) {
     const { settings } = this.plugin;
-    containerEl.empty();
-
-    new Setting(containerEl)
-      .setName("Tasks folder")
-      .setDesc("New tasks and the task views file are created in this folder.")
-      .addText((text) =>
-        text
-          .setPlaceholder(DEFAULTS.tasksFolder)
-          .setValue(settings.tasksFolder)
-          .onChange(async (value) => {
-            settings.tasksFolder = value.trim() || DEFAULTS.tasksFolder;
-            await this.plugin.persist();
-          })
-      );
-
-    new Setting(containerEl).setName("Pomodoro").setHeading();
-    const minutes = (name: string, key: keyof Omit<Settings, "tasksFolder">, desc?: string) =>
-      new Setting(containerEl)
-        .setName(name)
-        .setDesc(desc ?? "")
-        .addText((text) => {
-          text.inputEl.type = "number";
-          text.inputEl.min = "1";
-          text
-            .setPlaceholder(String(DEFAULTS[key]))
-            .setValue(String(settings[key]))
-            .onChange(async (value) => {
-              const n = Math.round(Number(value));
-              if (!(n >= 1)) return;
-              settings[key] = n;
-              this.plugin.pomodoro.refreshDurations();
-              await this.plugin.persist();
-            });
-        });
-    minutes("Focus length", "workMinutes", "Minutes.");
-    minutes("Short break", "shortBreakMinutes", "Minutes.");
-    minutes("Long break", "longBreakMinutes", "Minutes.");
-    minutes("Long break every", "longBreakEvery", "Number of focus sessions before a long break.");
+    if (key === "tasksFolder") settings.tasksFolder = String(value).trim() || DEFAULTS.tasksFolder;
+    else {
+      const n = Math.round(Number(value));
+      if (!(n >= 1)) return;
+      settings[key as MinuteKey] = n;
+      this.plugin.pomodoro.refreshDurations();
+    }
+    await this.plugin.persist();
   }
 }
