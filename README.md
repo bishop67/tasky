@@ -4,7 +4,7 @@ Tasks as notes for Obsidian: a sidebar panel with a mini calendar, Bases list/bo
 
 <p align="center"><img src="docs/board.png" alt="Board view" width="100%"></p>
 
-| ![Calendar view](docs/calendar.png) | ![List view](docs/list.png) |
+| <img src="docs/calendar.png" alt="Calendar view" height="220"> | <img src="docs/list.png" alt="List view" height="220"> |
 |:---:|:---:|
 | Calendar: drag to move a date | List: follows the base's sort and groups |
 
