@@ -125,6 +125,15 @@ export default class Tasky extends Plugin {
     this.registerInterval(window.setInterval(tick, 1000));
     // The focused task gets highlighted in every open view.
     this.registerEvent(this.pomodoro.on("change", () => this.views.forEach((v) => v.render())));
+    // Keep focus on a task when it, or a folder it's in, is renamed or moved.
+    this.registerEvent(
+      this.app.vault.on("rename", (file, oldPath) => {
+        const path = this.pomodoro.state.taskPath;
+        if (path === oldPath || path?.startsWith(oldPath + "/")) {
+          this.pomodoro.setTask(file.path + path.slice(oldPath.length));
+        }
+      })
+    );
     tick();
 
     this.addSettingTab(new TaskySettingTab(this.app, this));
