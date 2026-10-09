@@ -6,12 +6,12 @@ const MONTHS = "jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?
 const DAYS = "mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:r(?:s(?:day)?)?)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?";
 const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 const DATE =
-  `today|tonight|tomorrow|tmrw?|next week|in \\d+ (?:days?|weeks?)|(?:next |this )?(?:${DAYS})` +
+  `today|tonight|yesterday|tomorrow|tmrw?|next week|in \\d+ (?:days?|weeks?)|(?:next |this )?(?:${DAYS})` +
   `|\\d{4}-\\d{2}-\\d{2}|(?:${MONTHS}) \\d{1,2}(?:st|nd|rd|th)?|\\d{1,2}(?:st|nd|rd|th)? (?:${MONTHS})`;
 const TIME = `(?:at )?\\d{1,2}(?::\\d{2})? ?(?:am|pm)|(?:at )?\\d{1,2}:\\d{2}|at \\d{1,2}`;
 const fieldFor = (word = "") => (["scheduled", "sched", "start", "on"].includes(word.toLowerCase()) ? "scheduled" : "due");
 
-const DATE_RE = new RegExp(`(^|\\s)(?:(due|by|scheduled|sched|start|on) )?(${DATE})(?: (${TIME}))?(?=\\s|$)`, "i");
+const DATE_RE = new RegExp(`(^|\\s)(?:(due|by|scheduled|sched|start|on) )?(${DATE})(?: (${TIME}))?(?=\\s|$)`, "gi");
 const TIME_RE = new RegExp(`(^|\\s)(?:(due|by|scheduled|sched|start|on) )?(at \\d{1,2}(?::\\d{2})? ?(?:am|pm)?)(?=\\s|$)`, "i");
 const PRIORITY_RE = /(^|\s)!(high|normal|low|h|n|l)(?=\s|$)/i;
 const TAG_RE = /(^|\s)#([^\s#@!]+)/g;
@@ -21,6 +21,7 @@ function resolveDay(text: string, now: Moment): Moment | null {
   const t = text.toLowerCase();
   const today = now.clone().startOf("day");
   if (t === "today" || t === "tonight") return today;
+  if (t === "yesterday") return today.subtract(1, "day");
   if (/^(tomorrow|tmrw?)$/.test(t)) return today.add(1, "day");
   if (t === "next week") return today.add(7, "days");
   const inN = t.match(/^in (\d+) (day|week)/);
@@ -68,15 +69,14 @@ export function parseQuickAdd(input: string, now: Moment = moment()): Omit<Draft
     return lead;
   });
 
+  // Titles can contain date words ("Today's report fri"), so prefer a date with a keyword or a time, then the last one.
+  const cut = (m: RegExpMatchArray) => (text = text.slice(0, m.index) + m[1] + text.slice(m.index! + m[0].length));
   for (let i = 0; i < 2; i++) {
-    const m = text.match(DATE_RE);
+    const found = [...text.matchAll(DATE_RE)].filter((m) => !draft[fieldFor(m[2])] && resolveDay(m[3], now));
+    const m = found.filter((m) => m[2] || m[4]).pop() ?? found.pop();
     if (!m) break;
-    const day = resolveDay(m[3], now);
-    if (!day) break;
-    const field = fieldFor(m[2]);
-    if (draft[field]) break;
-    draft[field] = stamp(day, m[4] ? resolveTime(m[4]) : null);
-    text = text.replace(m[0], m[1]);
+    draft[fieldFor(m[2])] = stamp(resolveDay(m[3], now)!, m[4] ? resolveTime(m[4]) : null);
+    cut(m);
   }
 
   if (!draft.due && !draft.scheduled) {
@@ -84,7 +84,7 @@ export function parseQuickAdd(input: string, now: Moment = moment()): Omit<Draft
     const time = m && resolveTime(m[3]);
     if (m && time) {
       draft[fieldFor(m[2])] = stamp(now.clone().startOf("day"), time);
-      text = text.replace(m[0], m[1]);
+      cut(m);
     }
   }
 
