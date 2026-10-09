@@ -2,7 +2,7 @@ import { ItemView, WorkspaceLeaf, debounce, setIcon } from "obsidian";
 import type Tasky from "./main";
 import { dayKey, renderMonth, taskDays, tasksByDay } from "./calendar";
 import { Moment, moment } from "./moment";
-import { renderTaskCard } from "./card";
+import { renderEmpty, renderGroup, renderTaskCard } from "./card";
 import { Task, allTasks } from "./tasks";
 
 export const TASKS_PANEL = "tasky-tasks";
@@ -83,7 +83,7 @@ export class TasksPanel extends ItemView {
       this.render();
     }, this.showCalendar);
     icon("table", "Open task views", () => void this.plugin.openTaskBase());
-    icon("plus", "New task", () => this.plugin.openCreateModal(this.selected ? { due: this.selected } : {}));
+    icon("plus", "New task", this.newTask);
 
     if (this.showCalendar) this.renderCalendar(el, open);
 
@@ -121,23 +121,20 @@ export class TasksPanel extends ItemView {
     });
   }
 
-  private section(parent: HTMLElement, title: string, tasks: Task[], cls = "") {
-    if (!tasks.length) return;
-    const section = parent.createDiv({ cls: `tasky-group ${cls}` });
-    const heading = section.createDiv({ cls: "tasky-group__heading" });
-    heading.createSpan({ text: title });
-    heading.createSpan({ cls: "tasky-count", text: String(tasks.length) });
-    for (const task of tasks) renderTaskCard(section, this.plugin, task);
-  }
-
   private renderUpcoming(list: HTMLElement, open: Task[]) {
     const today = dayKey(moment());
     const sorted = [...open].sort(byDateThenPriority);
-    this.section(list, "Overdue", sorted.filter((t) => firstDay(t) && firstDay(t) < today), "is-overdue");
-    this.section(list, "Today", sorted.filter((t) => firstDay(t) === today));
-    this.section(list, "Upcoming", sorted.filter((t) => firstDay(t) && firstDay(t) > today));
-    this.section(list, "No date", sorted.filter((t) => !firstDay(t)));
-    if (!open.length) this.empty(list, "All clear.");
+    const groups: [string, (day?: string) => boolean][] = [
+      ["Overdue", (d) => !!d && d < today],
+      ["Today", (d) => d === today],
+      ["Upcoming", (d) => !!d && d > today],
+      ["No date", (d) => !d],
+    ];
+    for (const [title, test] of groups) {
+      const tasks = sorted.filter((t) => test(firstDay(t)));
+      if (tasks.length) renderGroup(list, this.plugin, title, tasks, title === "Overdue" ? "is-overdue" : "");
+    }
+    if (!open.length) renderEmpty(list, "All clear.", this.newTask);
   }
 
   private renderDay(list: HTMLElement, tasks: Task[]) {
@@ -154,14 +151,8 @@ export class TasksPanel extends ItemView {
       this.render();
     });
     for (const task of onDay) renderTaskCard(list, this.plugin, task);
-    if (!onDay.length) this.empty(list, "Nothing on this day.");
+    if (!onDay.length) renderEmpty(list, "Nothing on this day.", this.newTask);
   }
 
-  private empty(parent: HTMLElement, text: string) {
-    const empty = parent.createDiv({ cls: "tasky-empty" });
-    empty.createDiv({ text });
-    empty.createEl("button", { text: "New task" }).addEventListener("click", () =>
-      this.plugin.openCreateModal(this.selected ? { due: this.selected } : {})
-    );
-  }
+  private newTask = () => this.plugin.openCreateModal(this.selected ? { due: this.selected } : {});
 }

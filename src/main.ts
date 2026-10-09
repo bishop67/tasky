@@ -87,37 +87,35 @@ export default class Tasky extends Plugin {
     this.settings = { ...DEFAULTS, ...data.settings };
     this.pomodoro = new Pomodoro(this, data.pomodoro);
 
-    this.registerBasesView(LIST_VIEW, {
-      name: "Task list",
-      icon: "list-checks",
-      factory: (controller, el) => new TaskListView(controller, el, this),
-    });
-    this.registerBasesView(BOARD_VIEW, {
-      name: "Task board",
-      icon: "square-kanban",
-      factory: (controller, el) => new TaskBoardView(controller, el, this),
-    });
-    this.registerBasesView(CALENDAR_VIEW, {
-      name: "Task calendar",
-      icon: "calendar-days",
-      factory: (controller, el) => new TaskCalendarView(controller, el, this),
-    });
+    for (const [type, name, icon, View] of [
+      [LIST_VIEW, "Task list", "list-checks", TaskListView],
+      [BOARD_VIEW, "Task board", "square-kanban", TaskBoardView],
+      [CALENDAR_VIEW, "Task calendar", "calendar-days", TaskCalendarView],
+    ] as const) {
+      this.registerBasesView(type, { name, icon, factory: (controller, el) => new View(controller, el, this) });
+    }
     this.registerView(POMODORO_VIEW, (leaf) => new PomodoroView(leaf, this));
     this.registerView(TASKS_PANEL, (leaf) => new TasksPanel(leaf, this));
 
-    this.addRibbonIcon("list-checks", "Open tasks panel", () => this.activateSidebarView(TASKS_PANEL));
-    this.addRibbonIcon("timer", "Open pomodoro", () => this.activatePomodoroView());
+    const openPanel = () => this.activateSidebarView(TASKS_PANEL);
+    const openPomodoro = () => this.activateSidebarView(POMODORO_VIEW);
+    this.addRibbonIcon("list-checks", "Open tasks panel", openPanel);
+    this.addRibbonIcon("timer", "Open pomodoro", openPomodoro);
 
-    this.addCommand({ id: "create-task", name: "New task", callback: () => this.openCreateModal() });
-    this.addCommand({ id: "open-tasks-panel", name: "Open tasks panel", callback: () => this.activateSidebarView(TASKS_PANEL) });
-    this.addCommand({ id: "open-tasks", name: "Open task views", callback: () => this.openTaskBase() });
-    this.addCommand({ id: "open-pomodoro", name: "Open pomodoro", callback: () => this.activatePomodoroView() });
-    this.addCommand({ id: "toggle-pomodoro", name: "Start or pause pomodoro", callback: () => this.pomodoro.toggle() });
-    this.addCommand({ id: "stop-pomodoro", name: "Stop pomodoro", callback: () => this.pomodoro.stop() });
+    for (const [id, name, callback] of [
+      ["create-task", "New task", () => this.openCreateModal()],
+      ["open-tasks-panel", "Open tasks panel", openPanel],
+      ["open-tasks", "Open task views", () => this.openTaskBase()],
+      ["open-pomodoro", "Open pomodoro", openPomodoro],
+      ["toggle-pomodoro", "Start or pause pomodoro", () => this.pomodoro.toggle()],
+      ["stop-pomodoro", "Stop pomodoro", () => this.pomodoro.stop()],
+    ] as const) {
+      this.addCommand({ id, name, callback });
+    }
 
     const statusBar = this.addStatusBarItem();
     statusBar.addClass("tasky-statusbar", "mod-clickable");
-    statusBar.addEventListener("click", () => void this.activatePomodoroView());
+    statusBar.addEventListener("click", () => void openPomodoro());
     const tick = () => {
       this.pomodoro.tick();
       renderStatusBar(statusBar, this);
@@ -148,10 +146,6 @@ export default class Tasky extends Plugin {
       new Notice(`Created ${path}`);
     }
     await this.app.workspace.getLeaf(false).openFile(file);
-  }
-
-  activatePomodoroView() {
-    return this.activateSidebarView(POMODORO_VIEW);
   }
 
   async activateSidebarView(type: string) {

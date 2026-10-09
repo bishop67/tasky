@@ -17,18 +17,6 @@ export const PRIORITIES = [
 
 export const TASK_TAG = "task";
 
-export interface Task {
-  file: TFile;
-  title: string;
-  status: Status;
-  priority?: string;
-  due?: string;
-  scheduled?: string;
-  contexts: string[];
-  tags: string[];
-  pomodoros: number;
-}
-
 export interface Draft {
   title: string;
   status: Status;
@@ -37,6 +25,11 @@ export interface Draft {
   scheduled?: string;
   contexts: string[];
   tags: string[];
+}
+
+export interface Task extends Draft {
+  file: TFile;
+  pomodoros: number;
 }
 
 // Frontmatter values are whatever the YAML says; only strings and numbers count as text.
@@ -90,11 +83,10 @@ export async function updateTask(app: App, file: TFile, patch: Record<string, un
   });
 }
 
+const completedDate = (status: Status) => (status === "done" ? moment().format("YYYY-MM-DD") : null);
+
 export function setStatus(app: App, file: TFile, status: Status) {
-  return updateTask(app, file, {
-    status,
-    completedDate: status === "done" ? moment().format("YYYY-MM-DD") : null,
-  });
+  return updateTask(app, file, { status, completedDate: completedDate(status) });
 }
 
 const safeName = (title: string) =>
@@ -108,14 +100,15 @@ export async function createTask(app: App, folder: string, draft: Draft): Promis
   for (let n = 2; app.vault.getAbstractFileByPath(path); n++) path = `${dir}/${name} ${n}.md`;
 
   const file = await app.vault.create(path, "");
+  const { status, priority, due, scheduled, contexts } = draft;
   await updateTask(app, file, {
-    status: draft.status,
-    priority: draft.priority,
-    due: draft.due,
-    scheduled: draft.scheduled,
-    contexts: draft.contexts,
+    status,
+    priority,
+    due,
+    scheduled,
+    contexts,
     tags: [TASK_TAG, ...draft.tags.filter((t) => t !== TASK_TAG)],
-    completedDate: draft.status === "done" ? moment().format("YYYY-MM-DD") : null,
+    completedDate: completedDate(draft.status),
   });
   return file;
 }

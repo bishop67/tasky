@@ -9,7 +9,7 @@ const DATE =
   `today|tonight|tomorrow|tmrw?|next week|in \\d+ (?:days?|weeks?)|(?:next |this )?(?:${DAYS})` +
   `|\\d{4}-\\d{2}-\\d{2}|(?:${MONTHS}) \\d{1,2}(?:st|nd|rd|th)?|\\d{1,2}(?:st|nd|rd|th)? (?:${MONTHS})`;
 const TIME = `(?:at )?\\d{1,2}(?::\\d{2})? ?(?:am|pm)|(?:at )?\\d{1,2}:\\d{2}|at \\d{1,2}`;
-const SCHEDULE_WORDS = ["scheduled", "sched", "start", "on"];
+const fieldFor = (word = "") => (["scheduled", "sched", "start", "on"].includes(word.toLowerCase()) ? "scheduled" : "due");
 
 const DATE_RE = new RegExp(`(^|\\s)(?:(due|by|scheduled|sched|start|on) )?(${DATE})(?: (${TIME}))?(?=\\s|$)`, "i");
 const TIME_RE = new RegExp(`(^|\\s)(?:(due|by|scheduled|sched|start|on) )?(at \\d{1,2}(?::\\d{2})? ?(?:am|pm)?)(?=\\s|$)`, "i");
@@ -73,7 +73,7 @@ export function parseQuickAdd(input: string, now: Moment = moment()): Omit<Draft
     if (!m) break;
     const day = resolveDay(m[3], now);
     if (!day) break;
-    const field = SCHEDULE_WORDS.includes((m[2] ?? "").toLowerCase()) ? "scheduled" : "due";
+    const field = fieldFor(m[2]);
     if (draft[field]) break;
     draft[field] = stamp(day, m[4] ? resolveTime(m[4]) : null);
     text = text.replace(m[0], m[1]);
@@ -83,8 +83,7 @@ export function parseQuickAdd(input: string, now: Moment = moment()): Omit<Draft
     const m = text.match(TIME_RE);
     const time = m && resolveTime(m[3]);
     if (m && time) {
-      const field = SCHEDULE_WORDS.includes((m[2] ?? "").toLowerCase()) ? "scheduled" : "due";
-      draft[field] = stamp(now.clone().startOf("day"), time);
+      draft[fieldFor(m[2])] = stamp(now.clone().startOf("day"), time);
       text = text.replace(m[0], m[1]);
     }
   }
