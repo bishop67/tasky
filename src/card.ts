@@ -114,20 +114,38 @@ export function taskMenu(plugin: Tasky, task: Task, evt: MouseEvent) {
   menu.showAtMouseEvent(evt);
 }
 
-function priorityMenu(plugin: Tasky, task: Task, evt: MouseEvent) {
+export function priorityMenu(evt: MouseEvent, current: string | undefined, onPick: (priority?: string) => void) {
   const menu = new Menu();
   for (const p of PRIORITIES) {
-    menu.addItem((item) =>
-      item
-        .setTitle(p.label)
-        .setChecked(task.priority === p.value)
-        .onClick(() => updateTask(plugin.app, task.file, { priority: p.value }))
-    );
+    menu.addItem((item) => item.setTitle(p.label).setChecked(current === p.value).onClick(() => onPick(p.value)));
   }
-  menu.addItem((item) =>
-    item.setTitle("None").setChecked(!task.priority).onClick(() => updateTask(plugin.app, task.file, { priority: null }))
-  );
+  menu.addItem((item) => item.setTitle("None").setChecked(!current).onClick(() => onPick()));
   menu.showAtMouseEvent(evt);
+}
+
+export function renderGroup(parent: HTMLElement, plugin: Tasky, title: string | null, tasks: Task[], cls = "") {
+  const section = parent.createDiv({ cls: `tasky-group ${cls}` });
+  if (title !== null) {
+    const heading = section.createDiv({ cls: "tasky-group__heading" });
+    heading.createSpan({ text: title });
+    heading.createSpan({ cls: "tasky-count", text: String(tasks.length) });
+  }
+  for (const task of tasks) renderTaskCard(section, plugin, task);
+}
+
+export function renderEmpty(parent: HTMLElement, text: string, onNew: () => void) {
+  const empty = parent.createDiv({ cls: "tasky-empty" });
+  empty.createDiv({ text });
+  empty.createEl("button", { text: "New task" }).addEventListener("click", onNew);
+}
+
+export function dragSource(el: HTMLElement, payload: string) {
+  el.draggable = true;
+  el.addEventListener("dragstart", (evt) => {
+    evt.dataTransfer?.setData(DRAG_TYPE, payload);
+    el.addClass("is-dragging");
+  });
+  el.addEventListener("dragend", () => el.removeClass("is-dragging"));
 }
 
 function renderDate(meta: HTMLElement, label: string, value: string, kind: "due" | "scheduled", done: boolean) {
@@ -169,7 +187,7 @@ export function renderTaskCard(parent: HTMLElement, plugin: Tasky, task: CardTas
       setTooltip(dot, `${PRIORITIES.find((p) => p.value === task.priority)!.label} priority`);
       dot.addEventListener("click", (evt) => {
         evt.stopPropagation();
-        priorityMenu(plugin, saved, evt);
+        priorityMenu(evt, saved.priority, (p) => void updateTask(app, saved.file, { priority: p ?? null }));
       });
     }
   }
@@ -212,14 +230,7 @@ export function renderTaskCard(parent: HTMLElement, plugin: Tasky, task: CardTas
     evt.preventDefault();
     taskMenu(plugin, saved, evt);
   });
-  if (opts.draggable) {
-    card.draggable = true;
-    card.addEventListener("dragstart", (evt) => {
-      evt.dataTransfer?.setData(DRAG_TYPE, saved.file.path);
-      card.addClass("is-dragging");
-    });
-    card.addEventListener("dragend", () => card.removeClass("is-dragging"));
-  }
+  if (opts.draggable) dragSource(card, saved.file.path);
   return card;
 }
 

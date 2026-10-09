@@ -2,8 +2,8 @@ import { BasesEntry, BasesView, Keymap, QueryController, setIcon, setTooltip } f
 import type Tasky from "./main";
 import { dayKey, renderMonth, tasksByDay } from "./calendar";
 import { Moment, moment } from "./moment";
-import { DRAG_TYPE, renderTaskCard, taskMenu, withDay } from "./card";
-import { Draft, STATUSES, Status, Task, formatDate, readTask, setStatus, updateTask } from "./tasks";
+import { DRAG_TYPE, dragSource, renderEmpty, renderGroup, renderTaskCard, taskMenu, withDay } from "./card";
+import { Draft, STATUSES, Task, formatDate, readTask, setStatus, updateTask } from "./tasks";
 
 export const LIST_VIEW = "tasky-list";
 export const BOARD_VIEW = "tasky-board";
@@ -34,13 +34,6 @@ abstract class TaskView extends BasesView {
 
   protected tasks(entries: BasesEntry[]): Task[] {
     return entries.map((e) => readTask(this.app, e.file)).filter((t): t is Task => t !== null);
-  }
-
-  protected renderEmpty(parent: HTMLElement, text: string) {
-    const empty = parent.createDiv({ cls: "tasky-empty" });
-    empty.createDiv({ text });
-    const btn = empty.createEl("button", { text: "New task" });
-    btn.addEventListener("click", () => this.plugin.openCreateModal());
   }
 }
 
@@ -79,15 +72,9 @@ export class TaskListView extends TaskView {
       const tasks = this.tasks(group.entries);
       if (!tasks.length) continue;
       count += tasks.length;
-      const section = list.createDiv({ cls: "tasky-group" });
-      if (showHeadings) {
-        const heading = section.createDiv({ cls: "tasky-group__heading" });
-        heading.createSpan({ text: group.hasKey() ? group.key!.toString() : "None" });
-        heading.createSpan({ cls: "tasky-count", text: String(tasks.length) });
-      }
-      for (const task of tasks) renderTaskCard(section, this.plugin, task);
+      renderGroup(list, this.plugin, showHeadings ? (group.hasKey() ? group.key!.toString() : "None") : null, tasks);
     }
-    if (!count) this.renderEmpty(list, "Nothing here.");
+    if (!count) renderEmpty(list, "Nothing here.", () => this.plugin.openCreateModal());
   }
 }
 
@@ -115,16 +102,12 @@ export class TaskBoardView extends TaskView {
 
       const cards = column.createDiv({ cls: "tasky-column__cards" });
       for (const task of inColumn) renderTaskCard(cards, this.plugin, task, { draggable: true });
-      this.acceptDrops(column, status.value);
+      dropTarget(column, (path) => {
+        const file = this.app.vault.getFileByPath(path);
+        if (file) void setStatus(this.app, file, status.value);
+      });
     }
     board.scrollLeft = scroll;
-  }
-
-  private acceptDrops(column: HTMLElement, status: Status) {
-    dropTarget(column, (path) => {
-      const file = this.app.vault.getFileByPath(path);
-      if (file) void setStatus(this.app, file, status);
-    });
   }
 }
 
@@ -193,11 +176,6 @@ export class TaskCalendarView extends TaskView {
       evt.preventDefault();
       taskMenu(this.plugin, task, evt);
     });
-    chip.draggable = true;
-    chip.addEventListener("dragstart", (evt) => {
-      evt.dataTransfer?.setData(DRAG_TYPE, `${task.file.path}\n${field}`);
-      chip.addClass("is-dragging");
-    });
-    chip.addEventListener("dragend", () => chip.removeClass("is-dragging"));
+    dragSource(chip, `${task.file.path}\n${field}`);
   }
 }

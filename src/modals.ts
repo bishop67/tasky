@@ -1,8 +1,8 @@
 import { FuzzySuggestModal, Menu, Modal, Notice, setIcon, setTooltip } from "obsidian";
 import type Tasky from "./main";
-import { pickDate, renderTaskCard } from "./card";
+import { pickDate, priorityMenu, renderTaskCard } from "./card";
 import { parseQuickAdd } from "./parse";
-import { Draft, PRIORITIES, STATUSES, Task, allTasks, createTask, formatDate } from "./tasks";
+import { Draft, STATUSES, Task, allTasks, createTask, formatDate } from "./tasks";
 
 type Picked = Partial<Pick<Draft, "status" | "priority" | "due" | "scheduled">>;
 
@@ -96,14 +96,9 @@ export class CreateTaskModal extends Modal {
       });
     }
 
-    this.tool("flag", draft.priority ? `Priority: ${draft.priority}` : "Priority", !!draft.priority, (evt) => {
-      const menu = new Menu();
-      for (const p of PRIORITIES) {
-        menu.addItem((i) => i.setTitle(p.label).setChecked(draft.priority === p.value).onClick(() => this.pick({ priority: p.value })));
-      }
-      menu.addItem((i) => i.setTitle("None").setChecked(!draft.priority).onClick(() => this.pick({ priority: undefined })));
-      menu.showAtMouseEvent(evt);
-    });
+    this.tool("flag", draft.priority ? `Priority: ${draft.priority}` : "Priority", !!draft.priority, (evt) =>
+      priorityMenu(evt, draft.priority, (priority) => this.pick({ priority }))
+    );
 
     const status = STATUSES.find((s) => s.value === draft.status)!;
     this.tool(status.icon, `Status: ${status.label}`, draft.status !== "open", (evt) => {

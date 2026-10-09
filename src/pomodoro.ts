@@ -144,7 +144,7 @@ export class Pomodoro extends Events {
     if (this.state.phase !== "work") this.enter("work", false);
     this.start();
     this.changed();
-    void this.plugin.activatePomodoroView();
+    void this.plugin.activateSidebarView(POMODORO_VIEW);
   }
 
   private enter(phase: Phase, running: boolean) {
