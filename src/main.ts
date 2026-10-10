@@ -123,8 +123,15 @@ export default class Tasky extends Plugin {
       renderStatusBar(statusBar, this);
     };
     this.registerInterval(window.setInterval(tick, 1000));
-    // The focused task gets highlighted in every open view.
-    this.registerEvent(this.pomodoro.on("change", () => this.views.forEach((v) => v.render())));
+    // The focused task gets highlighted in every open view, so redraw them when it changes.
+    let focused = this.pomodoro.state.taskPath;
+    this.registerEvent(
+      this.pomodoro.on("change", () => {
+        if (this.pomodoro.state.taskPath === focused) return;
+        focused = this.pomodoro.state.taskPath;
+        this.views.forEach((v) => v.render());
+      })
+    );
     // Keep focus on a task when it, or a folder it's in, is renamed or moved.
     this.registerEvent(
       this.app.vault.on("rename", (file, oldPath) => {
