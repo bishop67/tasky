@@ -87,8 +87,10 @@ export async function updateTask(app: App, file: TFile, patch: Record<string, un
 
 const completedDate = (status: Status) => (status === "done" ? moment().format("YYYY-MM-DD") : null);
 
-export function setStatus(app: App, file: TFile, status: Status) {
-  return updateTask(app, file, { status, completedDate: completedDate(status) });
+// Setting the status a task already has is a no-op, so a done task keeps its completion date.
+export async function setStatus(app: App, file: TFile, status: Status) {
+  if (app.metadataCache.getFileCache(file)?.frontmatter?.status === status) return;
+  await updateTask(app, file, { status, completedDate: completedDate(status) });
 }
 
 const safeName = (title: string) =>
