@@ -49,13 +49,13 @@ function chime() {
   }
 }
 
-// The in-app notice stays until dismissed, and a system notification reaches you
-// when Obsidian isn't the window in front. Clicking it brings the timer up.
+// A system notification reaches you when Obsidian isn't the window in front.
+// Both close on their own; clicking the system one brings the timer up.
 function notify(plugin: Tasky, message: string) {
-  new Notice(message, 0);
+  new Notice(message);
   if (typeof Notification === "undefined") return;
   const send = () => {
-    const n = new Notification("Tasky", { body: message, requireInteraction: true });
+    const n = new Notification("Tasky", { body: message });
     n.onclick = () => {
       window.focus();
       void plugin.activateSidebarView(POMODORO_VIEW);
