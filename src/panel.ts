@@ -1,9 +1,9 @@
-import { ItemView, WorkspaceLeaf, debounce, setIcon } from "obsidian";
+import { ItemView, TAbstractFile, TFile, WorkspaceLeaf, debounce, setIcon } from "obsidian";
 import type Tasky from "./main";
 import { dayKey, renderMonth, taskDays, tasksByDay } from "./calendar";
 import { Moment, moment } from "./moment";
 import { renderEmpty, renderGroup, renderTaskCard } from "./card";
-import { Task, allTasks } from "./tasks";
+import { Task, allTasks, readTask } from "./tasks";
 
 export const TASKS_PANEL = "tasky-tasks";
 
@@ -24,6 +24,8 @@ export class TasksPanel extends ItemView {
   private selected: string | null = null;
   private showCalendar = true;
   private renderedDay = dayKey(moment());
+  // Task notes in the last draw.
+  private paths = new Set<string>();
 
   constructor(leaf: WorkspaceLeaf, private plugin: Tasky) {
     super(leaf);
@@ -45,9 +47,25 @@ export class TasksPanel extends ItemView {
     this.contentEl.addClass("tasky-panel");
     this.plugin.views.add(this);
     const refresh = debounce(() => this.render(), 250, true);
-    this.registerEvent(this.app.metadataCache.on("changed", refresh));
-    this.registerEvent(this.app.vault.on("delete", refresh));
-    this.registerEvent(this.app.vault.on("rename", refresh));
+    // Editing an ordinary note doesn't redraw the panel; only task notes, or notes that were tasks, do.
+    // A folder can hold tasks, so any folder change redraws too.
+    const affects = (file: TAbstractFile, path = file.path) =>
+      !(file instanceof TFile) || this.paths.has(path) || readTask(this.app, file) !== null;
+    this.registerEvent(
+      this.app.metadataCache.on("changed", (file) => {
+        if (affects(file)) refresh();
+      })
+    );
+    this.registerEvent(
+      this.app.vault.on("delete", (file) => {
+        if (affects(file)) refresh();
+      })
+    );
+    this.registerEvent(
+      this.app.vault.on("rename", (file, oldPath) => {
+        if (affects(file, oldPath)) refresh();
+      })
+    );
     // Roll "Today" over at midnight.
     this.registerInterval(
       window.setInterval(() => {
@@ -67,6 +85,7 @@ export class TasksPanel extends ItemView {
     el.empty();
     this.renderedDay = dayKey(moment());
     const tasks = allTasks(this.app);
+    this.paths = new Set(tasks.map((t) => t.file.path));
     const open = tasks.filter((t) => t.status !== "done");
 
     const toolbar = el.createDiv({ cls: "tasky-panel__toolbar" });
