@@ -31,6 +31,8 @@ export const formatClock = (ms: number) => {
 function chime() {
   try {
     const ctx = new AudioContext();
+    // Created outside a click, so it can start suspended.
+    void ctx.resume();
     [0, 0.25].forEach((offset) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -44,6 +46,25 @@ function chime() {
     window.setTimeout(() => void ctx.close(), 1000);
   } catch {
     // no audio available
+  }
+}
+
+// The in-app notice stays until dismissed, and a system notification reaches you
+// when Obsidian isn't the window in front. Clicking it brings the timer up.
+function notify(plugin: Tasky, message: string) {
+  new Notice(message, 0);
+  if (typeof Notification === "undefined") return;
+  const send = () => {
+    const n = new Notification("Tasky", { body: message, requireInteraction: true });
+    n.onclick = () => {
+      window.focus();
+      void plugin.activateSidebarView(POMODORO_VIEW);
+      n.close();
+    };
+  };
+  if (Notification.permission === "granted") send();
+  else if (Notification.permission !== "denied") {
+    void Notification.requestPermission().then((p) => p === "granted" && send());
   }
 }
 
@@ -164,7 +185,7 @@ export class Pomodoro extends Events {
   private async complete() {
     chime();
     if (this.state.phase !== "work") {
-      new Notice("Break's over. Ready when you are.");
+      notify(this.plugin, "Break's over. Ready when you are.");
       this.enter("work", false);
       return;
     }
@@ -173,7 +194,7 @@ export class Pomodoro extends Events {
     this.state.sessions++;
     const long = this.state.sessions % this.plugin.settings.longBreakEvery === 0;
     this.enter(long ? "long" : "short", true);
-    new Notice(`Pomodoro done. Time for a ${long ? "long" : "short"} break.`);
+    notify(this.plugin, `Pomodoro done. Time for a ${long ? "long" : "short"} break.`);
 
     const task = this.task;
     if (task) await updateTask(this.plugin.app, task.file, { pomodoros: task.pomodoros + 1 });
