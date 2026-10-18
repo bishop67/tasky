@@ -712,7 +712,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: var(--size-4-4);
-  padding: var(--size-4-12) var(--size-4-3) var(--size-4-6);
+  padding: 25px var(--size-4-3) var(--size-4-6);
 }
 
 .tasky-pomodoro__phase {
