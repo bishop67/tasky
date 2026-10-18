@@ -16,7 +16,10 @@ export interface PomodoroState {
   endsAt: number | null;
   remaining: number;
   total: number;
+  // The task being worked on; finished sessions count on it.
   taskPath: string | null;
+  // Tasks lined up after it.
+  queue: string[];
   sessions: number;
   today: { date: string; count: number };
 }
@@ -81,6 +84,7 @@ export class Pomodoro extends Events {
       remaining: fresh,
       total: fresh,
       taskPath: null,
+      queue: [],
       sessions: 0,
       today: { date: moment().format("YYYY-MM-DD"), count: 0 },
       ...saved,
@@ -109,6 +113,27 @@ export class Pomodoro extends Events {
   get task() {
     const file = this.state.taskPath ? this.plugin.app.vault.getFileByPath(this.state.taskPath) : null;
     return file ? readTask(this.plugin.app, file) : null;
+  }
+
+  // The current task first, then the queue, skipping notes that no longer exist.
+  get tasks() {
+    const { app } = this.plugin;
+    return this.paths.flatMap((path) => {
+      const file = app.vault.getFileByPath(path);
+      const task = file && readTask(app, file);
+      return task ? [task] : [];
+    });
+  }
+
+  get paths() {
+    return this.state.taskPath ? [this.state.taskPath, ...this.state.queue] : [];
+  }
+
+  private setPaths(paths: string[]) {
+    const unique = [...new Set(paths)];
+    this.state.taskPath = unique[0] ?? null;
+    this.state.queue = unique.slice(1);
+    this.changed();
   }
 
   private changed() {
@@ -154,14 +179,39 @@ export class Pomodoro extends Events {
     this.changed();
   }
 
-  setTask(file: TFile | string | null) {
-    this.state.taskPath = typeof file === "string" ? file : (file?.path ?? null);
-    this.changed();
+  // Adds a task to the end of the list.
+  addTask(file: TFile) {
+    this.setPaths([...this.paths, file.path]);
   }
 
-  // Picks the task, starts a focus session and shows the timer.
+  removeTask(path: string) {
+    this.setPaths(this.paths.filter((p) => p !== path));
+  }
+
+  clearTasks() {
+    this.setPaths([]);
+  }
+
+  // Keeps the list when a task, or a folder it's in, is renamed or moved.
+  renamed(oldPath: string, newPath: string) {
+    const move = (p: string) => (p === oldPath || p.startsWith(oldPath + "/") ? newPath + p.slice(oldPath.length) : p);
+    if (this.paths.some((p) => move(p) !== p)) this.setPaths(this.paths.map(move));
+  }
+
+  // A finished task leaves the list and the next one moves up.
+  // Finishing the last one before time's up stops the focus session.
+  taskChanged(file: TFile) {
+    if (!this.paths.includes(file.path) || readTask(this.plugin.app, file)?.status !== "done") return;
+    this.removeTask(file.path);
+    if (!this.paths.length && this.state.phase === "work" && !this.idle) {
+      this.stop();
+      new Notice("All tasks done. Pomodoro stopped.");
+    }
+  }
+
+  // Puts the task at the top of the list, starts a focus session and shows the timer.
   focusOn(file: TFile) {
-    this.state.taskPath = file.path;
+    this.setPaths([file.path, ...this.paths]);
     if (this.state.phase !== "work") this.enter("work", false);
     this.start();
     this.changed();
@@ -236,7 +286,7 @@ export class PomodoroView extends ItemView {
     this.registerEvent(this.plugin.pomodoro.on("change", () => this.render()));
     this.registerEvent(
       this.app.metadataCache.on("changed", (file) => {
-        if (file.path === this.plugin.pomodoro.state.taskPath) this.render();
+        if (this.plugin.pomodoro.paths.includes(file.path)) this.render();
       })
     );
     this.registerInterval(window.setInterval(() => this.update(), 1000));
@@ -268,14 +318,15 @@ export class PomodoroView extends ItemView {
     }
 
     const taskArea = el.createDiv({ cls: "tasky-pomodoro__task" });
-    const task = p.task;
-    if (task) {
-      renderTaskCard(taskArea, this.plugin, task);
+    // The top task is the one being worked on; the rest wait their turn.
+    const tasks = p.tasks;
+    for (const task of tasks) renderTaskCard(taskArea, this.plugin, task, { onRemove: () => p.removeTask(task.file.path) });
+    if (tasks.length) {
       const links = taskArea.createDiv({ cls: "tasky-pomodoro__links" });
-      links.createEl("a", { text: "Change task…" }).addEventListener("click", () => this.pickTask());
-      links.createEl("a", { text: "Clear task" }).addEventListener("click", () => p.setTask(null));
+      links.createEl("a", { text: "Add task…" }).addEventListener("click", () => this.pickTask());
+      links.createEl("a", { text: "Clear all" }).addEventListener("click", () => p.clearTasks());
     } else {
-      const choose = taskArea.createEl("a", { cls: "tasky-pomodoro__choose", text: "Choose a task…" });
+      const choose = taskArea.createEl("a", { cls: "tasky-pomodoro__choose", text: "Add a task…" });
       choose.addEventListener("click", () => this.pickTask());
     }
 
@@ -308,7 +359,8 @@ export class PomodoroView extends ItemView {
   }
 
   private pickTask() {
-    new TaskPickerModal(this.plugin, (file) => this.plugin.pomodoro.setTask(file)).open();
+    const p = this.plugin.pomodoro;
+    new TaskPickerModal(this.plugin, (file) => p.addTask(file), p.paths).open();
   }
 }
 

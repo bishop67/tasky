@@ -600,6 +600,17 @@ body {
   margin-top: var(--size-4-2);
 }
 
+.tasky-panel__show-all {
+  color: var(--text-muted);
+  font-weight: var(--font-normal);
+  text-decoration: none;
+  cursor: var(--cursor);
+}
+
+.tasky-panel__show-all:hover {
+  color: var(--text-normal);
+}
+
 .tasky-panel .tasky-card__actions {
   display: none;
 }
@@ -800,6 +811,11 @@ body {
 
 .tasky-pomodoro__task .tasky-card {
   text-align: left;
+}
+
+/* The top card here is always the focused one; keep its buttons hidden until hovered, like the rest. */
+.tasky-pomodoro__task .tasky-card.is-focused:not(:hover) .tasky-card__actions {
+  opacity: 0;
 }
 
 .tasky-pomodoro__links {
