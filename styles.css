@@ -600,6 +600,17 @@ body {
   margin-top: var(--size-4-2);
 }
 
+.tasky-panel__show-all {
+  color: var(--text-muted);
+  font-weight: var(--font-normal);
+  text-decoration: none;
+  cursor: var(--cursor);
+}
+
+.tasky-panel__show-all:hover {
+  color: var(--text-normal);
+}
+
 .tasky-panel .tasky-card__actions {
   display: none;
 }

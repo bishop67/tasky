@@ -168,8 +168,7 @@ export class TasksPanel extends ItemView {
       .sort((a, b) => Number(a.status === "done") - Number(b.status === "done") || rank(b) - rank(a));
     const heading = list.createDiv({ cls: "tasky-group__heading tasky-panel__day" });
     heading.createSpan({ text: moment(key).format("dddd, MMM D") });
-    const clear = heading.createDiv({ cls: "clickable-icon", attr: { "aria-label": "Show all tasks" } });
-    setIcon(clear, "x");
+    const clear = heading.createEl("a", { cls: "tasky-panel__show-all", text: "Show all" });
     clear.addEventListener("click", () => {
       this.selected = null;
       this.render();
