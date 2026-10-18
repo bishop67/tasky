@@ -107,6 +107,11 @@ export class TasksPanel extends ItemView {
     if (this.showCalendar) this.renderCalendar(el, open);
 
     const list = el.createDiv({ cls: "tasky-panel__list" });
+    // Always there, not only when the list is empty, so adding a second task is as easy as the first.
+    const add = list.createDiv({ cls: "tasky-panel__add" });
+    setIcon(add.createSpan(), "plus");
+    add.createSpan({ text: this.selected ? `New task on ${moment(this.selected).format("MMM D")}` : "New task" });
+    add.addEventListener("click", this.newTask);
     if (this.selected) this.renderDay(list, tasks);
     else this.renderUpcoming(list, open);
     el.scrollTop = scroll;
@@ -153,7 +158,7 @@ export class TasksPanel extends ItemView {
       const tasks = sorted.filter((t) => test(firstDay(t)));
       if (tasks.length) renderGroup(list, this.plugin, title, tasks, title === "Overdue" ? "is-overdue" : "");
     }
-    if (!open.length) renderEmpty(list, "All clear.", this.newTask);
+    if (!open.length) renderEmpty(list, "All clear.");
   }
 
   private renderDay(list: HTMLElement, tasks: Task[]) {
@@ -170,7 +175,7 @@ export class TasksPanel extends ItemView {
       this.render();
     });
     for (const task of onDay) renderTaskCard(list, this.plugin, task);
-    if (!onDay.length) renderEmpty(list, "Nothing on this day.", this.newTask);
+    if (!onDay.length) renderEmpty(list, "Nothing on this day.");
   }
 
   private newTask = () => this.plugin.openCreateModal(this.selected ? { due: this.selected } : {});

@@ -566,6 +566,27 @@ body {
   border-top: 1px solid var(--background-modifier-border);
 }
 
+.tasky-panel__add {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+  margin-top: var(--size-4-2);
+  padding: var(--size-4-2) var(--size-4-3);
+  border-radius: var(--radius-s);
+  color: var(--text-muted);
+  cursor: var(--cursor);
+}
+
+.tasky-panel__add:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.tasky-panel__add svg {
+  width: var(--icon-s);
+  height: var(--icon-s);
+}
+
 .tasky-panel__list .tasky-group {
   margin-top: var(--size-4-1);
 }
