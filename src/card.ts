@@ -133,10 +133,10 @@ export function renderGroup(parent: HTMLElement, plugin: Tasky, title: string | 
   for (const task of tasks) renderTaskCard(section, plugin, task);
 }
 
-export function renderEmpty(parent: HTMLElement, text: string, onNew: () => void) {
+export function renderEmpty(parent: HTMLElement, text: string, onNew?: () => void) {
   const empty = parent.createDiv({ cls: "tasky-empty" });
   empty.createDiv({ text });
-  empty.createEl("button", { text: "New task" }).addEventListener("click", onNew);
+  if (onNew) empty.createEl("button", { text: "New task" }).addEventListener("click", onNew);
 }
 
 export function dragSource(el: HTMLElement, payload: string) {
