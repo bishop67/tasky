@@ -17,7 +17,7 @@ Tasks as notes for Obsidian: a sidebar panel with a mini calendar, Bases list/bo
 - **Tasky: Open task views:** creates `Tasks/Tasks.base` (Today, All, Board, Calendar, Done).
 - **Ribbon timer icon:** pomodoro. Finished sessions count on the task.
 
-Quick add: `Buy groceries tomorrow at 5pm @home #errands !high` → due date, time, context, tag, priority. `start fri` sets the scheduled date instead.
+Quick add: `Buy groceries tomorrow at 5pm @home #errands !high` → due date, time, context, tag, priority. `start fri` sets the scheduled date instead. With no date, a new task is due today (turn off in settings).
 
 A task is a note in `Tasks/` tagged `task`, with `status`, `priority`, `due`, `scheduled`, `contexts` and `pomodoros` in its frontmatter.
 
