@@ -308,7 +308,7 @@ export class PomodoroView extends ItemView {
   }
 
   private pickTask() {
-    new TaskPickerModal(this.plugin, (task) => this.plugin.pomodoro.setTask(task.file)).open();
+    new TaskPickerModal(this.plugin, (file) => this.plugin.pomodoro.setTask(file)).open();
   }
 }
 
