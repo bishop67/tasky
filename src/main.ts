@@ -7,13 +7,14 @@ import { BOARD_VIEW, CALENDAR_VIEW, LIST_VIEW, TaskBoardView, TaskCalendarView, 
 
 interface Settings {
   tasksFolder: string;
+  dueToday: boolean;
   workMinutes: number;
   shortBreakMinutes: number;
   longBreakMinutes: number;
   longBreakEvery: number;
 }
 
-type MinuteKey = Exclude<keyof Settings, "tasksFolder">;
+type MinuteKey = Exclude<keyof Settings, "tasksFolder" | "dueToday">;
 
 interface SavedData {
   settings?: Partial<Settings>;
@@ -22,6 +23,7 @@ interface SavedData {
 
 const DEFAULTS: Settings = {
   tasksFolder: "Tasks",
+  dueToday: true,
   workMinutes: 25,
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
@@ -192,6 +194,11 @@ class TaskySettingTab extends PluginSettingTab {
         control: { type: "folder", key: "tasksFolder", placeholder: DEFAULTS.tasksFolder },
       },
       {
+        name: "Due today by default",
+        desc: "A new task with no date in its text is due today. A day picked on a calendar still wins.",
+        control: { type: "toggle", key: "dueToday" },
+      },
+      {
         type: "group",
         heading: "Pomodoro",
         items: [
@@ -208,6 +215,7 @@ class TaskySettingTab extends PluginSettingTab {
   async setControlValue(key: string, value: unknown) {
     const { settings } = this.plugin;
     if (key === "tasksFolder") settings.tasksFolder = String(value).trim() || DEFAULTS.tasksFolder;
+    else if (key === "dueToday") settings.dueToday = value === true;
     else {
       const n = Math.round(Number(value));
       if (!(n >= 1)) return;

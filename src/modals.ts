@@ -1,6 +1,7 @@
 import { FuzzySuggestModal, Menu, Modal, Notice, setIcon, setTooltip } from "obsidian";
 import type Tasky from "./main";
 import { pickDate, priorityMenu, renderTaskCard } from "./card";
+import { moment } from "./moment";
 import { parseQuickAdd } from "./parse";
 import { Draft, STATUSES, Task, allTasks, createTask, formatDate } from "./tasks";
 
@@ -8,15 +9,18 @@ type Picked = Partial<Pick<Draft, "status" | "priority" | "due" | "scheduled">>;
 
 // One line of text, parsed as you type, with buttons to set the same fields by hand.
 // Anything picked with a button wins over what the text says.
+// With no date in the text or picked, the task is due today, if that setting is on.
 export class CreateTaskModal extends Modal {
   private input!: HTMLTextAreaElement;
   private preview!: HTMLElement;
   private toolbar!: HTMLElement;
   private picked: Picked;
+  private fallbackDue?: string;
 
   constructor(private plugin: Tasky, defaults: Picked = {}) {
     super(plugin.app);
     this.picked = { ...defaults };
+    if (plugin.settings.dueToday) this.fallbackDue = moment().format("YYYY-MM-DD");
   }
 
   onOpen() {
@@ -56,7 +60,8 @@ export class CreateTaskModal extends Modal {
       ...parsed,
       status: this.picked.status ?? "open",
       priority: this.picked.priority ?? parsed.priority,
-      due: this.picked.due ?? parsed.due,
+      // "start fri" alone means the task isn't due yet.
+      due: this.picked.due ?? parsed.due ?? (parsed.scheduled ? undefined : this.fallbackDue),
       scheduled: this.picked.scheduled ?? parsed.scheduled,
     };
   }
@@ -109,9 +114,11 @@ export class CreateTaskModal extends Modal {
       menu.showAtMouseEvent(evt);
     });
 
-    if (Object.values(this.picked).some((v) => v !== undefined)) {
+    const usingFallback = !!this.fallbackDue && draft.due === this.fallbackDue && !this.picked.due;
+    if (usingFallback || Object.values(this.picked).some((v) => v !== undefined)) {
       this.tool("eraser", "Clear picked values", false, () => {
         this.picked = {};
+        this.fallbackDue = undefined;
         this.refresh();
       });
     }
