@@ -706,12 +706,13 @@ body {
 
 /* ---------- Pomodoro ---------- */
 
-.tasky-pomodoro {
+/* Beats Obsidian's own .view-content padding, and clears the tab header like the panel's toolbar does. */
+.view-content.tasky-pomodoro {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--size-4-4);
-  padding: var(--size-4-6) var(--size-4-3);
+  padding: var(--size-4-12) var(--size-4-3) var(--size-4-6);
 }
 
 .tasky-pomodoro__phase {
