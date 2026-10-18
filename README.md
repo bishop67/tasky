@@ -15,7 +15,7 @@ Tasks as notes for Obsidian: a sidebar panel with a mini calendar, Bases list/bo
 
 - **Ribbon checklist icon:** Tasks panel. **+** adds a task.
 - **Tasky: Open task views:** creates `Tasks/Tasks.base` (Today, All, Board, Calendar, Done).
-- **Ribbon timer icon:** pomodoro. Finished sessions count on the task.
+- **Ribbon timer icon:** pomodoro. Add several tasks; finished sessions count on the top one, and ticking the last one done stops the timer.
 
 Quick add: `Buy groceries tomorrow at 5pm @home #errands !high` → due date, time, context, tag, priority. `start fri` sets the scheduled date instead. With no date, a new task is due today (turn off in settings).
 

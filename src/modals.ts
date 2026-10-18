@@ -150,9 +150,10 @@ export class TaskPickerModal extends FuzzySuggestModal<Task> {
   private footer!: HTMLElement;
   private creating = false;
 
-  constructor(private plugin: Tasky, private onPick: (file: TFile) => void) {
+  // `exclude`: paths already picked, left out of the list.
+  constructor(private plugin: Tasky, private onPick: (file: TFile) => void, private exclude: string[] = []) {
     super(plugin.app);
-    this.setPlaceholder("Pick a task to focus on, or type a new one");
+    this.setPlaceholder("Pick a task, or type a new one");
     this.setInstructions([
       { command: "↑↓", purpose: "to navigate" },
       { command: "↵", purpose: "to pick" },
@@ -208,7 +209,7 @@ export class TaskPickerModal extends FuzzySuggestModal<Task> {
   }
 
   getItems() {
-    return allTasks(this.app).filter((t) => t.status !== "done");
+    return allTasks(this.app).filter((t) => t.status !== "done" && !this.exclude.includes(t.file.path));
   }
 
   getItemText(task: Task) {

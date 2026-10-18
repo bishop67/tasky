@@ -12,6 +12,8 @@ export interface CardOptions {
   // Preview cards in the create modal don't react to clicks.
   interactive?: boolean;
   draggable?: boolean;
+  // In the pomodoro's list a task is already there, so the focus button becomes a remove button.
+  onRemove?: () => void;
 }
 
 // Opens the native date picker next to the pointer and resolves with YYYY-MM-DD, or null if dismissed.
@@ -209,11 +211,13 @@ export function renderTaskCard(parent: HTMLElement, plugin: Tasky, task: CardTas
   if (!saved) return card;
 
   const actions = card.createDiv({ cls: "tasky-card__actions" });
-  const focus = actions.createDiv({ cls: "clickable-icon", attr: { "aria-label": "Focus on this task" } });
-  setIcon(focus, "timer");
+  const { onRemove } = opts;
+  const focus = actions.createDiv({ cls: "clickable-icon", attr: { "aria-label": onRemove ? "Remove from pomodoro" : "Focus on this task" } });
+  setIcon(focus, onRemove ? "x" : "timer");
   focus.addEventListener("click", (evt) => {
     evt.stopPropagation();
-    plugin.pomodoro.focusOn(saved.file);
+    if (onRemove) onRemove();
+    else plugin.pomodoro.focusOn(saved.file);
   });
   const more = actions.createDiv({ cls: "clickable-icon", attr: { "aria-label": "More" } });
   setIcon(more, "more-horizontal");

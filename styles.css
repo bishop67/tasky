@@ -802,6 +802,11 @@ body {
   text-align: left;
 }
 
+/* The top card here is always the focused one; keep its buttons hidden until hovered, like the rest. */
+.tasky-pomodoro__task .tasky-card.is-focused:not(:hover) .tasky-card__actions {
+  opacity: 0;
+}
+
 .tasky-pomodoro__links {
   display: flex;
   justify-content: space-around;
