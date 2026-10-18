@@ -639,6 +639,43 @@ body {
   background-color: var(--interactive-accent);
 }
 
+.tasky-picker__create {
+  display: flex;
+  gap: var(--size-4-2);
+  padding: var(--size-4-2) var(--size-4-3);
+  border-top: 1px solid var(--background-modifier-border);
+  cursor: var(--cursor);
+}
+
+.tasky-picker__create:hover {
+  background: var(--background-modifier-hover);
+}
+
+.tasky-picker__create-icon {
+  padding-top: var(--size-4-3);
+  color: var(--interactive-accent);
+}
+
+.tasky-picker__create-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tasky-picker__create-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.tasky-picker__key {
+  padding: 0 var(--size-2-2);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  font-family: var(--font-monospace);
+}
+
 .tasky-create__preview {
   min-height: 44px;
   padding: var(--size-4-1) 0;

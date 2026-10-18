@@ -1,4 +1,4 @@
-import { FuzzySuggestModal, Menu, Modal, Notice, setIcon, setTooltip } from "obsidian";
+import { FuzzySuggestModal, Menu, Modal, Notice, TFile, setIcon, setTooltip } from "obsidian";
 import type Tasky from "./main";
 import { pickDate, priorityMenu, renderTaskCard } from "./card";
 import { moment } from "./moment";
@@ -145,10 +145,66 @@ export class CreateTaskModal extends Modal {
   }
 }
 
+// Pick an open task, or type a new one and press Shift+Enter (or click the preview) to create and pick it, like TaskNotes.
 export class TaskPickerModal extends FuzzySuggestModal<Task> {
-  constructor(private plugin: Tasky, private onPick: (task: Task) => void) {
+  private footer!: HTMLElement;
+  private creating = false;
+
+  constructor(private plugin: Tasky, private onPick: (file: TFile) => void) {
     super(plugin.app);
-    this.setPlaceholder("Pick a task to focus on");
+    this.setPlaceholder("Pick a task to focus on, or type a new one");
+    this.setInstructions([
+      { command: "↑↓", purpose: "to navigate" },
+      { command: "↵", purpose: "to pick" },
+      { command: "⇧↵", purpose: "to create a new task" },
+      { command: "esc", purpose: "to dismiss" },
+    ]);
+  }
+
+  onOpen() {
+    void super.onOpen();
+    this.scope.register(["Shift"], "Enter", (evt) => {
+      evt.preventDefault();
+      void this.create();
+      return false;
+    });
+    // Right under the results, above the key hints.
+    this.footer = createDiv({ cls: "tasky-picker__create" });
+    this.resultContainerEl.after(this.footer);
+    this.footer.addEventListener("click", () => void this.create());
+    this.inputEl.addEventListener("input", () => this.renderFooter());
+    this.renderFooter();
+  }
+
+  // New tasks follow the same rules as the New task window, including due today.
+  private draft(): Draft {
+    const parsed = parseQuickAdd(this.inputEl.value);
+    const due = parsed.due ?? (parsed.scheduled || !this.plugin.settings.dueToday ? undefined : moment().format("YYYY-MM-DD"));
+    return { ...parsed, status: "open", due };
+  }
+
+  private renderFooter() {
+    this.footer.empty();
+    const draft = this.draft();
+    this.footer.toggle(!!draft.title);
+    if (!draft.title) return;
+    setIcon(this.footer.createDiv({ cls: "tasky-picker__create-icon" }), "plus-circle");
+    const body = this.footer.createDiv({ cls: "tasky-picker__create-body" });
+    renderTaskCard(body, this.plugin, { ...draft, file: null, pomodoros: 0 }, { interactive: false });
+    const hint = body.createDiv({ cls: "tasky-picker__create-hint" });
+    hint.createSpan({ cls: "tasky-picker__key", text: "⇧↵" });
+    hint.createSpan({ text: "Create task" });
+  }
+
+  private async create() {
+    const draft = this.draft();
+    if (!draft.title || this.creating) return;
+    this.creating = true;
+    if (!draft.priority) delete draft.priority;
+    this.close();
+    const file = await createTask(this.app, this.plugin.settings.tasksFolder, draft);
+    new Notice(`Created “${file.basename}”`);
+    this.onPick(file);
   }
 
   getItems() {
@@ -160,6 +216,6 @@ export class TaskPickerModal extends FuzzySuggestModal<Task> {
   }
 
   onChooseItem(task: Task) {
-    this.onPick(task);
+    this.onPick(task.file);
   }
 }
