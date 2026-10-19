@@ -51,4 +51,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${GITHUB_REF#refs/tags/}"
-          gh release create "$tag" --title="$tag" --draft main.js manifest.json styles.css
+          # The same notes the plugin shows in its "What's new" tab.
+          notes="docs/releases/$tag.md"
+          if [ -f "$notes" ]; then set -- --notes-file "$notes"; else set -- --notes ""; fi
+          gh release create "$tag" --title="$tag" --draft "$@" main.js manifest.json styles.css
