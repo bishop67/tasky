@@ -4,26 +4,30 @@ import { POMODORO_VIEW, Pomodoro, PomodoroState, PomodoroView, renderStatusBar }
 import { TASKS_PANEL, TasksPanel } from "./panel";
 import { Draft } from "./tasks";
 import { BOARD_VIEW, CALENDAR_VIEW, LIST_VIEW, TaskBoardView, TaskCalendarView, TaskListView } from "./views";
+import { WHATS_NEW_VIEW, WhatsNewView } from "./whats-new";
 
 interface Settings {
   tasksFolder: string;
   dueToday: boolean;
+  whatsNew: boolean;
   workMinutes: number;
   shortBreakMinutes: number;
   longBreakMinutes: number;
   longBreakEvery: number;
 }
 
-type MinuteKey = Exclude<keyof Settings, "tasksFolder" | "dueToday">;
+type MinuteKey = Exclude<keyof Settings, "tasksFolder" | "dueToday" | "whatsNew">;
 
 interface SavedData {
   settings?: Partial<Settings>;
   pomodoro?: Partial<PomodoroState>;
+  lastSeenVersion?: string;
 }
 
 const DEFAULTS: Settings = {
   tasksFolder: "Tasks",
   dueToday: true,
+  whatsNew: true,
   workMinutes: 25,
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
@@ -85,11 +89,16 @@ export default class Tasky extends Plugin {
   pomodoro!: Pomodoro;
   // Everything that draws task cards, so they can redraw when the focused task changes.
   views = new Set<{ render(): void }>();
+  // The version whose release notes were last shown.
+  lastSeenVersion = "";
 
   async onload() {
-    const data = ((await this.loadData()) ?? {}) as SavedData;
+    const saved = (await this.loadData()) as SavedData | null;
+    const data = saved ?? {};
     this.settings = { ...DEFAULTS, ...data.settings };
     this.pomodoro = new Pomodoro(this, data.pomodoro);
+    // Saved data without a version is from before 1.5.0, so that's an update too, not a fresh install.
+    this.lastSeenVersion = saved ? (data.lastSeenVersion ?? "") : this.manifest.version;
 
     for (const [type, name, icon, View] of [
       [LIST_VIEW, "Task list", "list-checks", TaskListView],
@@ -100,6 +109,7 @@ export default class Tasky extends Plugin {
     }
     this.registerView(POMODORO_VIEW, (leaf) => new PomodoroView(leaf, this));
     this.registerView(TASKS_PANEL, (leaf) => new TasksPanel(leaf, this));
+    this.registerView(WHATS_NEW_VIEW, (leaf) => new WhatsNewView(leaf, this));
 
     const openPanel = () => this.activateSidebarView(TASKS_PANEL);
     const openPomodoro = () => this.activateSidebarView(POMODORO_VIEW);
@@ -113,6 +123,7 @@ export default class Tasky extends Plugin {
       ["open-pomodoro", "Open pomodoro", openPomodoro],
       ["toggle-pomodoro", "Start or pause pomodoro", () => this.pomodoro.toggle()],
       ["stop-pomodoro", "Stop pomodoro", () => this.pomodoro.stop()],
+      ["show-whats-new", "Show what's new", () => this.openWhatsNew()],
     ] as const) {
       this.addCommand({ id, name, callback });
     }
@@ -139,10 +150,26 @@ export default class Tasky extends Plugin {
     tick();
 
     this.addSettingTab(new TaskySettingTab(this.app, this));
+
+    // After an update, show what changed once.
+    this.app.workspace.onLayoutReady(() => {
+      const { version } = this.manifest;
+      if (this.lastSeenVersion === version) return;
+      this.lastSeenVersion = version;
+      void this.persist();
+      if (this.settings.whatsNew) void this.openWhatsNew();
+    });
   }
 
   persist() {
-    return this.saveData({ settings: this.settings, pomodoro: this.pomodoro.state });
+    return this.saveData({ settings: this.settings, pomodoro: this.pomodoro.state, lastSeenVersion: this.lastSeenVersion });
+  }
+
+  async openWhatsNew() {
+    const { workspace } = this.app;
+    const leaf = workspace.getLeavesOfType(WHATS_NEW_VIEW)[0] ?? workspace.getLeaf("tab");
+    await leaf.setViewState({ type: WHATS_NEW_VIEW, active: true });
+    await workspace.revealLeaf(leaf);
   }
 
   openCreateModal(defaults: Partial<Pick<Draft, "status" | "due">> = {}) {
@@ -192,6 +219,11 @@ class TaskySettingTab extends PluginSettingTab {
         control: { type: "toggle", key: "dueToday" },
       },
       {
+        name: "Show what's new after updates",
+        desc: "Opens a tab with the release notes the first time Tasky starts after an update.",
+        control: { type: "toggle", key: "whatsNew" },
+      },
+      {
         type: "group",
         heading: "Pomodoro",
         items: [
@@ -208,7 +240,7 @@ class TaskySettingTab extends PluginSettingTab {
   async setControlValue(key: string, value: unknown) {
     const { settings } = this.plugin;
     if (key === "tasksFolder") settings.tasksFolder = String(value).trim() || DEFAULTS.tasksFolder;
-    else if (key === "dueToday") settings.dueToday = value === true;
+    else if (key === "dueToday" || key === "whatsNew") settings[key] = value === true;
     else {
       const n = Math.round(Number(value));
       if (!(n >= 1)) return;
