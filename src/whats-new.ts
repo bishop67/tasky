@@ -8,6 +8,7 @@ import n130 from "../docs/releases/1.3.0.md";
 import n131 from "../docs/releases/1.3.1.md";
 import n140 from "../docs/releases/1.4.0.md";
 import n150 from "../docs/releases/1.5.0.md";
+import n151 from "../docs/releases/1.5.1.md";
 
 export const WHATS_NEW_VIEW = "tasky-whats-new";
 
@@ -15,6 +16,7 @@ const RELEASES_URL = "https://github.com/bishop67/tasky/releases";
 
 // Newest first. Each release adds its docs/releases/<version>.md here.
 const NOTES: [version: string, markdown: string][] = [
+  ["1.5.1", n151],
   ["1.5.0", n150],
   ["1.4.0", n140],
   ["1.3.1", n131],
