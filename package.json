@@ -1,6 +1,6 @@
 {
   "name": "obsidian-tasky",
-  "version": "1.4.0",
+  "version": "1.5.1",
   "private": true,
   "description": "Tasks as notes in Bases, with a sidebar panel, calendar and pomodoro timer",
   "main": "main.js",
