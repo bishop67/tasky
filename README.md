@@ -29,6 +29,6 @@ npm install && npm run build
 
 Copy `main.js`, `manifest.json`, `styles.css` to `<vault>/.obsidian/plugins/tasky/` and enable it. Needs Obsidian 1.13+ with Bases on.
 
-To release: bump `manifest.json`, push a matching tag (`1.0.2`), publish the draft release.
+To release: write `docs/releases/<version>.md` and list it in `src/whats-new.ts` (it shows in the plugin's "What's new" tab and on GitHub), bump `manifest.json`, push a matching tag (`1.0.2`), publish the draft release.
 
 MIT

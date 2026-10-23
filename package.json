@@ -5,8 +5,8 @@
   "description": "Tasks as notes in Bases, with a sidebar panel, calendar and pomodoro timer",
   "main": "main.js",
   "scripts": {
-    "dev": "esbuild src/main.ts --bundle --format=cjs --target=es2020 --external:obsidian --external:electron \"--external:@codemirror/*\" \"--external:@lezer/*\" --outfile=main.js --sourcemap=inline --watch",
-    "build": "tsc --noEmit && esbuild src/main.ts --bundle --format=cjs --target=es2020 --external:obsidian --external:electron \"--external:@codemirror/*\" \"--external:@lezer/*\" --outfile=main.js",
+    "dev": "esbuild src/main.ts --bundle --format=cjs --target=es2020 --external:obsidian --external:electron \"--external:@codemirror/*\" \"--external:@lezer/*\" --loader:.md=text --outfile=main.js --sourcemap=inline --watch",
+    "build": "tsc --noEmit && esbuild src/main.ts --bundle --format=cjs --target=es2020 --external:obsidian --external:electron \"--external:@codemirror/*\" \"--external:@lezer/*\" --loader:.md=text --outfile=main.js",
     "lint": "eslint src"
   },
   "author": "bishop67",
