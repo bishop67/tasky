@@ -867,3 +867,63 @@ body {
   opacity: 0.6;
 }
 
+
+/* ---------- What's new ---------- */
+
+.tasky-whats-new {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--size-4-6) var(--size-4-4);
+}
+
+.tasky-whats-new__version {
+  margin-bottom: var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+}
+
+.tasky-whats-new__version > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding: var(--size-4-3) var(--size-4-4);
+  list-style: none;
+  cursor: var(--cursor);
+}
+
+.tasky-whats-new__version > summary::-webkit-details-marker {
+  display: none;
+}
+
+.tasky-whats-new__chevron {
+  display: flex;
+  color: var(--text-muted);
+  transition: transform 120ms ease;
+}
+
+.tasky-whats-new__version[open] .tasky-whats-new__chevron {
+  transform: rotate(90deg);
+}
+
+.tasky-whats-new__number {
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-semibold);
+}
+
+.tasky-whats-new__badge {
+  padding: 0 var(--size-4-2);
+  border-radius: var(--radius-s);
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-size: var(--font-ui-smaller);
+}
+
+.tasky-whats-new__body {
+  padding: 0 var(--size-4-4) var(--size-4-2);
+}
+
+.tasky-whats-new__all {
+  display: block;
+  margin-top: var(--size-4-6);
+  text-align: center;
+}
