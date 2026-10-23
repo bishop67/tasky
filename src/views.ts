@@ -13,6 +13,9 @@ abstract class TaskView extends BasesView {
   constructor(controller: QueryController, protected root: HTMLElement, protected plugin: Tasky) {
     super(controller);
     root.addClass("tasky-view");
+    // Obsidian hides an empty view inside an embed (`.bases-view:empty`) and won't run the query
+    // until the view is shown, so an empty root never gets data. Start with a child; render() replaces it.
+    root.createDiv({ cls: "tasky-loading" });
     plugin.views.add(this);
   }
 
